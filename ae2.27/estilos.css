@@ -1,0 +1,89 @@
+body {
+  background-color: #f2f2f2;
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  text-align: center;
+}
+
+h1 {
+  font-size: 2rem;
+  color: #3498db;
+}
+
+p {
+  font-size: 1.2rem;
+  color: #555;
+}
+
+button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  margin: 10px;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+
+.primary-button {
+  background-color: #3498db;
+  color: white;
+}
+
+.primary-button:hover {
+  background-color: #2e86c1;
+}
+
+.secondary-button {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.secondary-button:hover {
+  background-color: #27b261;
+}
+
+.buy-button {
+  background-color: #f39c12;
+  color: white;
+}
+
+.buy-button:hover {
+  background-color: #d78e0f;
+}
+
+.product {
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin: 10px;
+  padding: 10px;
+  transition: box-shadow 0.3s ease;
+}
+
+.product:hover {
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+img {
+  max-width: 20%;
+  height: auto;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+.important-text {
+  font-weight: bold;
+  color: #e74c3c;
+}
+
+.centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.centered > *:not(:last-child) {
+  margin-right: 20px;
+}

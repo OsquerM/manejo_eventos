@@ -1,0 +1,100 @@
+// Variables
+$primary-color: #3498db;
+$secondary-color: #e74c3c;
+$font-family: Arial, sans-serif;
+$base-font-size: 16px;
+
+// Mapa de botones
+$button-styles: (
+  "primary-button": $primary-color,
+  "secondary-button": #2ecc71,
+  "buy-button": #f39c12
+);
+
+// Mixin para centrar elementos horizontal y verticalmente
+@mixin center-element {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+// Estilos generales
+body {
+  background-color: #f2f2f2;
+  font-family: $font-family;
+  font-size: $base-font-size;
+  text-align: center;
+}
+
+h1 {
+  font-size: 2rem;
+  color: $primary-color;
+}
+
+p {
+  font-size: 1.2rem;
+  color: #555;
+}
+
+button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  margin: 10px;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+
+// Bucle para generar clases de botones con hover
+@each $name, $color in $button-styles {
+  .#{$name} {
+    background-color: $color;
+    color: white;
+
+    &:hover {
+      background-color: darken($color, 10%);
+    }
+  }
+}
+
+// Estilos de productos
+.product {
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin: 10px;
+  padding: 10px;
+  transition: box-shadow 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  }
+}
+
+img {
+  max-width: 20%;
+  height: auto;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+.important-text {
+  font-weight: bold;
+  color: $secondary-color;
+}
+
+// Centrado del último producto
+.centered {
+  @include center-element;
+
+  > *:not(:last-child) {
+    margin-right: 20px;
+  }
+}
+//mixin center-element crea un contenedor flexbox que centra su contenido tanto horizontal como verticalmente.
+
+// .centered aplica este mixin a un contenedor específico, asegurando que solo el último elemento hijo esté centrado, mientras que los demás tienen un margen a la derecha para separación.
+//> solo hijos directos del contenedor .centered y * selecciona todos los elementos hijos.
+// :not(:last-child) excluye el último hijo del contenedor, aplicando el margen solo a los demás hijos.
