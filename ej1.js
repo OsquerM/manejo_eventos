@@ -32,7 +32,45 @@ const elementos = {
     resumenContenido: document.getElementById('resumen-contenido')
 };
 
-let carrito = JSON.parse(localStorage.getItem(STORAGE_KEY_PEDIDO)) || [];
+// ========================
+// OBJETOS
+// ========================
+class Producto {
+    constructor(nombre, precio, cantidad = 1) {
+        this.nombre = nombre;
+        this.precio = precio;
+        this.cantidad = cantidad;
+    }
+
+    subtotal() {
+        return this.precio * this.cantidad;
+    }
+}
+
+const Carrito = {
+    // Al cargar, convertimos los objetos de localStorage en instancias de Producto
+    items: JSON.parse(localStorage.getItem(STORAGE_KEY_PEDIDO))?.map(p => new Producto(p.nombre, p.precio, p.cantidad)) || [],
+
+    agregar(producto) {
+        const existe = this.items.find(p => p.nombre === producto.nombre);
+        if (existe) existe.cantidad++;
+        else this.items.push(producto);
+        this.guardar();
+    },
+
+    borrarTodo() {
+        this.items = [];
+        localStorage.removeItem(STORAGE_KEY_PEDIDO);
+    },
+
+    total() {
+        return this.items.reduce((acc, item) => acc + item.subtotal(), 0);
+    },
+
+    guardar() {
+        localStorage.setItem(STORAGE_KEY_PEDIDO, JSON.stringify(this.items));
+    }
+};
 
 // ========================
 // FUNCIONES
@@ -86,12 +124,8 @@ function obtenerDatosFormulario() {
     return datos;
 }
 
-function guardarCarrito() {
-    localStorage.setItem(STORAGE_KEY_PEDIDO, JSON.stringify(carrito));
-}
-
 function actualizarResumen() {
-    if (carrito.length === 0) {
+    if (Carrito.items.length === 0) {
         elementos.resumenContenido.innerHTML = '<p class="empty-cart">Actualmente no hay productos en el carrito</p>';
         return;
     }
@@ -105,13 +139,10 @@ function actualizarResumen() {
     if (datos.telefono) html += `<p>Teléfono: ${datos.telefono}</p>`;
 
     html += '<h3>Productos:</h3><ul>';
-    let total = 0;
-    carrito.forEach(item => {
-        const subtotal = item.precio * item.cantidad;
-        total += subtotal;
-        html += `<li>${item.nombre} × ${item.cantidad} → ${subtotal.toFixed(2)} €</li>`;
+    Carrito.items.forEach(item => {
+        html += `<li>${item.nombre} × ${item.cantidad} → ${item.subtotal().toFixed(2)} €</li>`;
     });
-    html += `</ul><p><strong>Total: ${total.toFixed(2)} €</strong></p>`;
+    html += `</ul><p><strong>Total: ${Carrito.total().toFixed(2)} €</strong></p>`;
 
     elementos.resumenContenido.innerHTML = html;
 }
@@ -124,16 +155,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     elementos.buyButtons.forEach(btn => {
         btn.addEventListener('click', () => {
-            const producto = btn.closest('.product');
-            const nombre = producto.querySelector('h3').textContent;
-            const precioTexto = producto.querySelector('.important-text').textContent.replace('€','').replace(',','.');
+            const productoDOM = btn.closest('.product');
+            const nombre = productoDOM.querySelector('h3').textContent;
+            const precioTexto = productoDOM.querySelector('.important-text').textContent.replace('€','').replace(',','.');
             const precio = parseFloat(precioTexto);
 
-            const existe = carrito.find(i => i.nombre === nombre);
-            if (existe) existe.cantidad++;
-            else carrito.push({nombre, precio, cantidad:1});
-
-            guardarCarrito();
+            const producto = new Producto(nombre, precio);
+            Carrito.agregar(producto);
             actualizarResumen();
         });
     });
@@ -148,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     elementos.btnRealizarPedido.addEventListener('click', () => {
-        if (carrito.length === 0) { alert("Actualmente no hay productos en el carrito."); return; }
+        if (Carrito.items.length === 0) { alert("Actualmente no hay productos en el carrito."); return; }
         if (!validarFormulario()) { alert("Corrige los errores del formulario."); return; }
 
         alert("¡Pedido registrado correctamente!\nGracias por tu compra ♥");
@@ -156,10 +184,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     elementos.btnBorrarPedido.addEventListener('click', () => {
-        if (carrito.length === 0) { alert("No hay pedido para borrar"); return; }
+        if (Carrito.items.length === 0) { alert("No hay pedido para borrar"); return; }
         if(confirm("¿Quieres borrar TODO el carrito?")){
-            carrito = [];
-            localStorage.removeItem(STORAGE_KEY_PEDIDO);
+            Carrito.borrarTodo();
             actualizarResumen();
         }
     });
