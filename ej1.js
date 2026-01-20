@@ -1,6 +1,5 @@
-// ========================
+
 // CONFIGURACIÓN
-// ========================
 const STORAGE_KEY_PEDIDO = 'kiosko_pedido_actual';
 
 const PATRONES = {
@@ -21,9 +20,7 @@ const MENSAJES_ERROR = {
     direccion: "La dirección debe tener al menos 5 caracteres"
 };
 
-// ========================
 // REFERENCIAS AL DOM
-// ========================
 const elementos = {
     buyButtons: document.querySelectorAll('.buy-button'),
     formContacto: document.getElementById('form-datos-contacto'),
@@ -32,9 +29,8 @@ const elementos = {
     resumenContenido: document.getElementById('resumen-contenido')
 };
 
-// ========================
+
 // OBJETOS
-// ========================
 class Producto {
     constructor(nombre, precio, cantidad = 1) {
         this.nombre = nombre;
@@ -72,9 +68,7 @@ const Carrito = {
     }
 };
 
-// ========================
 // FUNCIONES
-// ========================
 function mostrarError(input, mensaje) {
     input.classList.add('error');
     let span = input.parentElement.querySelector('.error-message');
@@ -147,9 +141,7 @@ function actualizarResumen() {
     elementos.resumenContenido.innerHTML = html;
 }
 
-// ========================
 // EVENTOS
-// ========================
 document.addEventListener('DOMContentLoaded', () => {
     actualizarResumen();
 
