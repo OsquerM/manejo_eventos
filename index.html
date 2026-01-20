@@ -9,12 +9,19 @@
 </head>
 <body>
     <h1>Kiosko Fernando</h1>
-    <p>Nuestras delicatessen ahora te las llevamos a casa.</p>
-    <button class="primary-button">Ver Menú</button>
-    <button class="secondary-button">Registrarse</button>
+
+    <!-- Párrafo de bienvenida -->
+    <p id="mensaje-bienvenida">
+        Nuestras delicatessen ahora te las llevamos a casa.
+    </p>
+
+    <!-- Botones principales -->
+    <button class="primary-button" id="btn-ver-pedido">Ver pedido</button>
+    <button class="secondary-button" id="btn-logout" style="background-color:red;">Log out</button>
 
     <h2>Los más demandados</h2>
 
+    <!-- Productos -->
     <div class="product">
         <img src="https://cdn-icons-png.flaticon.com/512/468/468339.png" alt="Gambas">
         <h3>Gamba roja</h3>
@@ -39,8 +46,10 @@
         <button class="buy-button">Comprar</button>
     </div>
 
+    <!-- Contenedor Formulario + Resumen -->
     <div class="form-summary-wrapper">
-        <!-- Formulario -->
+
+        <!-- Formulario de contacto -->
         <section class="form-container">
             <h2>Datos de contacto</h2>
             <form id="form-datos-contacto" novalidate>

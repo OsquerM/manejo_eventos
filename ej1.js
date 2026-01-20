@@ -1,36 +1,49 @@
-
+// ========================
 // CONFIGURACIÓN
+// ========================
 const STORAGE_KEY_PEDIDO = 'kiosko_pedido_actual';
+const STORAGE_KEY_CONTACTO = 'kiosko_datos_contacto';
+const STORAGE_KEY_USUARIO = 'kiosko_usuario';
 
+// ========================
+// VALIDACIONES
+// ========================
 const PATRONES = {
-    nombre: /^[A-Za-zÁÉÍÓÚáéíóúÑñ]{3,10}$/,
-    apellido1: /^[A-Za-zÁÉÍÓÚáéíóúÑñ]{4,8}$/,
-    apellido2: /^[A-Za-zÁÉÍÓÚáéíóúÑñ]{4,8}$/,
+    nombre: /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,9}$/,
+    apellido1: /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{3,7}$/,
+    apellido2: /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{3,7}$/,
     telefono: /^\+\d{2}\s\d{3}\s\d{3}\s\d{3}$/,
-    email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+    email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     direccion: /^.{5,100}$/
 };
 
 const MENSAJES_ERROR = {
-    nombre: "El nombre debe tener entre 3 y 10 letras",
-    apellido1: "El primer apellido debe tener entre 4 y 8 letras",
-    apellido2: "El segundo apellido debe tener entre 4 y 8 letras",
-    telefono: "Formato esperado: +34 666 777 888",
-    email: "Introduce un email válido",
-    direccion: "La dirección debe tener al menos 5 caracteres"
+    nombre: "Nombre entre 3 y 10 letras, inicial mayúscula",
+    apellido1: "Apellido entre 4 y 8 letras, inicial mayúscula",
+    apellido2: "Apellido entre 4 y 8 letras, inicial mayúscula",
+    telefono: "Formato: +34 666 777 888",
+    email: "Email no válido",
+    direccion: "Dirección mínima de 5 caracteres"
 };
 
-// REFERENCIAS AL DOM
+// ========================
+// DOM
+// ========================
 const elementos = {
     buyButtons: document.querySelectorAll('.buy-button'),
-    formContacto: document.getElementById('form-datos-contacto'),
-    btnRealizarPedido: document.getElementById('btn-realizar-pedido'),
-    btnBorrarPedido: document.getElementById('btn-borrar-pedido'),
-    resumenContenido: document.getElementById('resumen-contenido')
+    form: document.getElementById('form-datos-contacto'),
+    btnRealizar: document.getElementById('btn-realizar-pedido'),
+    btnBorrar: document.getElementById('btn-borrar-pedido'),
+    resumen: document.getElementById('resumen-contenido'),
+    btnVerPedido: document.getElementById('btn-ver-pedido'),
+    btnLogout: document.getElementById('btn-logout'),
+    mensajeBienvenida: document.getElementById('mensaje-bienvenida'),
+    wrapper: document.querySelector('.form-summary-wrapper')
 };
 
-
-// OBJETOS
+// ========================
+// POO
+// ========================
 class Producto {
     constructor(nombre, precio, cantidad = 1) {
         this.nombre = nombre;
@@ -44,8 +57,9 @@ class Producto {
 }
 
 const Carrito = {
-    // Al cargar, convertimos los objetos de localStorage en instancias de Producto
-    items: JSON.parse(localStorage.getItem(STORAGE_KEY_PEDIDO))?.map(p => new Producto(p.nombre, p.precio, p.cantidad)) || [],
+    items: JSON.parse(localStorage.getItem(STORAGE_KEY_PEDIDO))?.map(
+        p => new Producto(p.nombre, p.precio, p.cantidad)
+    ) || [],
 
     agregar(producto) {
         const existe = this.items.find(p => p.nombre === producto.nombre);
@@ -54,103 +68,112 @@ const Carrito = {
         this.guardar();
     },
 
-    borrarTodo() {
+    guardar() {
+        localStorage.setItem(STORAGE_KEY_PEDIDO, JSON.stringify(this.items));
+    },
+
+    borrar() {
         this.items = [];
         localStorage.removeItem(STORAGE_KEY_PEDIDO);
     },
 
     total() {
-        return this.items.reduce((acc, item) => acc + item.subtotal(), 0);
-    },
-
-    guardar() {
-        localStorage.setItem(STORAGE_KEY_PEDIDO, JSON.stringify(this.items));
+        return this.items.reduce((acc, p) => acc + p.subtotal(), 0);
     }
 };
 
-// FUNCIONES
-function mostrarError(input, mensaje) {
-    input.classList.add('error');
-    let span = input.parentElement.querySelector('.error-message');
-    if (!span) {
-        span = document.createElement('span');
-        span.className = 'error-message';
-        span.style.color = 'red';
-        input.parentElement.appendChild(span);
-    }
-    span.textContent = mensaje;
-}
-
-function limpiarError(input) {
-    input.classList.remove('error');
-    const span = input.parentElement.querySelector('.error-message');
-    if (span) span.textContent = '';
-}
-
-function validarCampo(campo, valor) {
-    if (campo === 'apellido2' && valor.trim() === '') return true;
-    const patron = PATRONES[campo];
-    return patron.test(valor.trim());
-}
-
+// ========================
+// FORMULARIO
+// ========================
 function validarFormulario() {
-    let esValido = true;
-    const inputs = elementos.formContacto.querySelectorAll('input, textarea');
+    let valido = true;
+    const inputs = elementos.form.querySelectorAll('input, textarea');
+
     inputs.forEach(input => {
-        limpiarError(input);
-        const valor = input.value;
-        if (input.required && valor.trim() === '') {
-            mostrarError(input, "Este campo es obligatorio");
-            esValido = false;
-        } else if (!validarCampo(input.id, valor)) {
-            mostrarError(input, MENSAJES_ERROR[input.id]);
-            esValido = false;
+        input.classList.remove('error');
+
+        if (!input.checkValidity() || (PATRONES[input.id] && !PATRONES[input.id].test(input.value))) {
+            valido = false;
+            input.classList.add('error');
         }
     });
-    return esValido;
+
+    return valido;
 }
 
-function obtenerDatosFormulario() {
+function guardarContacto() {
     const datos = {};
-    ['nombre','apellido1','apellido2','telefono','email','direccion'].forEach(id => {
-        datos[id] = document.getElementById(id).value.trim();
-    });
+    ['nombre','apellido1','apellido2','telefono','email','direccion']
+        .forEach(id => datos[id] = document.getElementById(id).value.trim());
+    sessionStorage.setItem(STORAGE_KEY_CONTACTO, JSON.stringify(datos));
     return datos;
 }
 
+// ========================
+// RESUMEN
+// ========================
 function actualizarResumen() {
-    if (Carrito.items.length === 0) {
-        elementos.resumenContenido.innerHTML = '<p class="empty-cart">Actualmente no hay productos en el carrito</p>';
+    const datos = JSON.parse(sessionStorage.getItem(STORAGE_KEY_CONTACTO));
+
+    if (!datos) {
+        elementos.resumen.innerHTML = '<p>Actualmente no hay datos de contacto</p>';
         return;
     }
 
-    const datos = obtenerDatosFormulario();
-    const nombreCompleto = [datos.nombre, datos.apellido1, datos.apellido2].filter(Boolean).join(' ');
+    if (Carrito.items.length === 0) {
+        elementos.resumen.innerHTML = '<p>Actualmente no hay productos en el carrito</p>';
+        return;
+    }
 
-    let html = '<h3>Pedido de:</h3>';
-    if (nombreCompleto) html += `<p><strong>${nombreCompleto}</strong></p>`;
-    if (datos.direccion) html += `<p>Dirección: ${datos.direccion}</p>`;
-    if (datos.telefono) html += `<p>Teléfono: ${datos.telefono}</p>`;
+    let html = `
+        <p><strong>${datos.nombre} ${datos.apellido1} ${datos.apellido2 || ''}</strong></p>
+        <p>${datos.direccion}</p>
+        <p>${datos.telefono}</p>
+        <ul>
+    `;
 
-    html += '<h3>Productos:</h3><ul>';
-    Carrito.items.forEach(item => {
-        html += `<li>${item.nombre} × ${item.cantidad} → ${item.subtotal().toFixed(2)} €</li>`;
+    Carrito.items.forEach(p => {
+        html += `<li>${p.nombre} x ${p.cantidad} → ${p.subtotal().toFixed(2)} €</li>`;
     });
-    html += `</ul><p><strong>Total: ${Carrito.total().toFixed(2)} €</strong></p>`;
 
-    elementos.resumenContenido.innerHTML = html;
+    html += `</ul><p><strong>Total: ${Carrito.total().toFixed(2)} €</strong></p>`;
+    elementos.resumen.innerHTML = html;
 }
 
+// ========================
+// USUARIO
+// ========================
+function gestionarUsuario() {
+    let usuario = localStorage.getItem(STORAGE_KEY_USUARIO);
+
+    if (!usuario) {
+        usuario = prompt("Introduce tu nombre de usuario:");
+        if (!usuario) return;
+        localStorage.setItem(STORAGE_KEY_USUARIO, usuario);
+        elementos.mensajeBienvenida.textContent =
+            `¡Bienvenido ${usuario}, qué delicatessen deseas probar hoy!`;
+    } else {
+        elementos.mensajeBienvenida.textContent =
+            `¡Bienvenido de nuevo ${usuario}!, ¿repetimos?`;
+    }
+}
+
+// ========================
 // EVENTOS
+// ========================
 document.addEventListener('DOMContentLoaded', () => {
+    gestionarUsuario();
     actualizarResumen();
 
+    // ---- COMPRAR ----
     elementos.buyButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const productoDOM = btn.closest('.product');
             const nombre = productoDOM.querySelector('h3').textContent;
-            const precioTexto = productoDOM.querySelector('.important-text').textContent.replace('€','').replace(',','.');
-            const precio = parseFloat(precioTexto);
+            // 🔹 Quitamos el € y sustituimos la coma por punto
+            const precio = parseFloat(
+                productoDOM.querySelector('.important-text').textContent.replace('€','').replace(',','.')
+            );
 
             const producto = new Producto(nombre, precio);
             Carrito.agregar(producto);
@@ -158,28 +181,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    elementos.formContacto.querySelectorAll('input, textarea').forEach(input => {
-        input.addEventListener('input', () => {
-            limpiarError(input);
-            if(input.value.trim() !== '' && !validarCampo(input.id, input.value)){
-                mostrarError(input, MENSAJES_ERROR[input.id]);
-            }
-        });
-    });
-
-    elementos.btnRealizarPedido.addEventListener('click', () => {
-        if (Carrito.items.length === 0) { alert("Actualmente no hay productos en el carrito."); return; }
-        if (!validarFormulario()) { alert("Corrige los errores del formulario."); return; }
-
-        alert("¡Pedido registrado correctamente!\nGracias por tu compra ♥");
+    // ---- REALIZAR PEDIDO ----
+    elementos.btnRealizar.addEventListener('click', () => {
+        if (!validarFormulario()) return alert("Corrige los errores");
+        if (!confirm("¿Deseas enviar los datos?")) return;
+        guardarContacto();
         actualizarResumen();
     });
 
-    elementos.btnBorrarPedido.addEventListener('click', () => {
-        if (Carrito.items.length === 0) { alert("No hay pedido para borrar"); return; }
-        if(confirm("¿Quieres borrar TODO el carrito?")){
-            Carrito.borrarTodo();
-            actualizarResumen();
-        }
+    // ---- BORRAR PEDIDO ----
+    elementos.btnBorrar.addEventListener('click', () => {
+        Carrito.borrar();
+        sessionStorage.removeItem(STORAGE_KEY_CONTACTO);
+        actualizarResumen();
+    });
+
+    // ---- VER PEDIDO ----
+    elementos.btnVerPedido.addEventListener('click', () => {
+        elementos.wrapper.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // ---- LOGOUT ----
+    elementos.btnLogout.addEventListener('click', () => {
+        localStorage.removeItem(STORAGE_KEY_USUARIO);
+        location.reload();
     });
 });
