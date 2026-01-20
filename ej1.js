@@ -170,7 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => {
             const productoDOM = btn.closest('.product');
             const nombre = productoDOM.querySelector('h3').textContent;
-            // 🔹 Quitamos el € y sustituimos la coma por punto
             const precio = parseFloat(
                 productoDOM.querySelector('.important-text').textContent.replace('€','').replace(',','.')
             );
